@@ -15,6 +15,9 @@ const mutations = {
   addUser: {
     type: UserType,
     args: {
+      sub: {
+        type: new GraphQLNonNull(GraphQLString)
+      },
       name: {
         type: new GraphQLNonNull(GraphQLString)
       },
@@ -22,13 +25,9 @@ const mutations = {
         type: new GraphQLNonNull(GraphQLString)
       }
     },
-    resolve(parentValue, { name, email }) {
-      console.log(req.token);
-      if (!req.user) {
-        throw new Error('Authentication required.');
-      }
-
+    resolve(parentValue, { sub, name, email }) {
       return UserModel.create({
+        sub,
         name,
         email
       });
@@ -37,37 +36,29 @@ const mutations = {
   editUser: {
     type: UserType,
     args: {
-      id: {
+      name: {
         type: new GraphQLNonNull(GraphQLString)
       },
-      name: {
-        type: GraphQLString
-      },
       email: {
-        type: GraphQLString
+        type: new GraphQLNonNull(GraphQLString)
       }
     },
-    resolve(parentValue, { id, name, email }) {
+    resolve(parentValue, { name, email }, req) {
       if (!req.user) {
         throw new Error('Authentication required.');
       }
 
-      return UserModel.findByIdAndUpdate(id, {name, email});
+      return UserModel.findOneAndUpdate({ sub: req.user.sub }, {name, email});
     }
   },
   deleteUser: {
     type: UserType,
-    args: {
-      id: {
-        type: new GraphQLNonNull(GraphQLID)
-      }
-    },
-    resolve(parentValue, { id }) {
+    resolve(parentValue, args, req) {
       if (!req.user) {
         throw new Error('Authentication required.');
       }
 
-      return UserModel.findByIdAndRemove(id);
+      return UserModel.findOneAndRemove({ sub: req.user.sub });
     }
   }
 };

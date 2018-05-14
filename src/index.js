@@ -13,6 +13,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import Wrapper from './components/Wrapper';
 import Home from './components/Home';
 import Callback from './components/Callback';
+import EditUser from './components/EditUser';
 
 // Configure the HTTP link so we can pass in
 // a JWT authentication header.
@@ -22,11 +23,13 @@ const httpLink = createHttpLink({
 
 // Sets the authentication header with an authentication token from local storage
 const middlewareLink = new ApolloLink((operation, forward) => {
-  operation.setContext({
-    headers: {
-      authorization: `Bearer ${localStorage.getItem("id_token")}`
-    }
-  });
+  if (localStorage.getItem("id_token")) {
+    operation.setContext({
+      headers: {
+        authorization: `Bearer ${localStorage.getItem("id_token")}`
+      }
+    });
+  }
   return forward(operation);
 });
 
@@ -50,9 +53,7 @@ const Root = (): React.Node => {
         <Wrapper>
           <Route exact path="/" component={Home} />
           <Route path="/callback" component={Callback} />
-          {/* <Route path=":id" component={UserItem} />
-          <Route path="edit/:id" component={EditUser} />
-          <Route path="delete/:id" component={DeleteUser} /> */}
+          <Route exact path="/edit" component={EditUser} />
         </Wrapper>
       </Router>
     </ApolloProvider>

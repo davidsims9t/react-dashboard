@@ -1,9 +1,10 @@
 /* @flow */
 import React, { Component } from 'react';
-import { RaisedButton, List, ListItem, Subheader, Avatar } from 'material-ui';
+import { RaisedButton, List, ListItem, Subheader, Snackbar } from 'material-ui';
+import { withRouter } from 'react-router';
 import gql from 'graphql-tag';
 import { graphql } from 'react-apollo';
-import { login, isLoggedIn, getIdToken } from '../utils/auth';
+import { login, isLoggedIn, getIdToken, getProfile, logout } from '../utils/auth';
 import Progress from './Progress';
 
 const styles = {
@@ -14,6 +15,31 @@ const styles = {
 };
 
 class Home extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+        isOpen: false,
+        message: ""
+    };
+  }
+
+  onDelete = () => {
+    this.props.deleteUser()
+      .then((response) => {
+        logout();
+        this.setState({
+            isOpen: true,
+            message: "User deleted!"
+        });
+      }).catch((e) => {
+        this.setState({
+            isOpen: true,
+            message: "An error occured"
+        });
+      });
+  }
+
   render() {
     if (this.props.data.loading) {
       return (
@@ -22,22 +48,40 @@ class Home extends Component {
         </div>
       );
     }
-    console.log(this.props.data);
 
     return (
       <div style={styles.wrapper}>
-        <RaisedButton label="Sign Up / Log In" onClick={() => !isLoggedIn() ? login() : ''} primary={true} />
+        <RaisedButton label="Edit User" onClick={() => !isLoggedIn() ? login() : this.props.history.replace('/edit')} primary={true} />
         <List>
           <Subheader>Users</Subheader>
-          <ListItem
-            primaryText="Brendan Lim"
-            leftAvatar={<Avatar src="images/ok-128.jpg" />}
-          />
+          {this.props.data.users.map((user) => {
+            return (
+              <ListItem
+                onClick={this.onDelete}
+                key={user.id}
+                primaryText={user.name}
+              />
+            );
+          })}
         </List>
+        <Snackbar
+          open={this.state.isOpen}
+          message={this.state.message}
+          autoHideDuration={4000}
+          onRequestClose={() => this.setState({isOpen: false, message: ""})}
+        />
       </div>
     );
   }
 }
+
+const deleteUser = gql`
+  mutation {
+    deleteUser {
+      id
+    }
+  }
+`;
 
 const query = gql`
 {
@@ -49,4 +93,10 @@ const query = gql`
 }
 `;
 
-export default graphql(query)(Home);
+export default graphql(deleteUser, {name: 'deleteUser'})(
+  graphql(query, {
+    options: {
+      fetchPolicy: 'network-only'
+    }
+  })(withRouter(Home))
+);

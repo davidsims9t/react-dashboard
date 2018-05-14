@@ -4,8 +4,7 @@ const mongoose = require('mongoose');
 const {
   GraphQLObjectType,
   GraphQLString,
-  GraphQLList,
-  GraphQLID
+  GraphQLList
 } = graphql;
 const UserType = require('./User');
 const UserModel = require('../models/User');
@@ -22,12 +21,12 @@ const RootQuery = new GraphQLObjectType({
     user: {
       type: UserType,
       args: {
-        id: {
-          type: GraphQLID
+        sub: {
+          type: GraphQLString
         }
       },
       resolve(parentValue, args) {
-        return UserModel.findById(args.id);
+        return UserModel.findOne({ sub: args.sub });
       }
     }
   }

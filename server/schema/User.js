@@ -15,6 +15,9 @@ const UserType = new GraphQLObjectType({
         return parentValue._id;
       }
     },
+    sub: {
+      type: GraphQLString
+    },
     name: {
       type: GraphQLString
     },

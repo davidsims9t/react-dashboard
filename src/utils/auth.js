@@ -1,6 +1,5 @@
 /* @flow */
 import decode from 'jwt-decode';
-import { browserHistory } from 'react-router';
 import auth0 from 'auth0-js';
 
 const auth = new auth0.WebAuth({
@@ -23,7 +22,6 @@ export function login() {
 
 export function logout() {
     clearIdToken();
-    browserHistory.push('/');
 }
 
 export function requireAuth(replace) {
@@ -49,11 +47,11 @@ function setIdToken(token:string) {
     localStorage.setItem(ID_TOKEN_KEY, token);
 }
 
-export function getEmail() {
+export function getEmail():string {
     return getProfile().email;
 }
 
-export function getName() {
+export function getName():string {
     return getProfile().nickname;
 }
 
@@ -70,13 +68,22 @@ export function getAndStoreParameters(callback) {
 }
 
 export function getProfile() {
-    const token = decode(getIdToken());
-    return token;
+    if (getIdToken()) {
+        const token = decode(getIdToken());
+        return token;
+    }
+    
+    return {};
 }
 
 function getTokenExpirationDate(encodedToken:string):Date {
+    if (!encodedToken) {
+        return null;
+    }
     const token = decode(encodedToken);
-    if (!token.exp) { return null; }
+    if (!token.exp) {
+        return null;
+    }
 
     const date = new Date(0);
     date.setUTCSeconds(token.exp);
